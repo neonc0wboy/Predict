@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prediction Generator</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background-color: #1e1e1e;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            text-align: center;
+            color: #bb86fc;
+        }
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: #b0b0b0;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid #333;
+            background-color: #2c2c2c;
+            color: #e0e0e0;
+            font-size: 1rem;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #6200ee;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        button:disabled {
+            background-color: #333;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background-color: #3700b3;
+        }
+        #result {
+            margin-top: 2rem;
+            background-color: #2c2c2c;
+            padding: 1.5rem;
+            border-radius: 4px;
+            white-space: pre-wrap; /* Preserves line breaks in the prediction */
+            border-left: 4px solid #03dac6;
+        }
+        .hidden {
+            display: none;
+        }
+        .error {
+            color: #cf6679;
+            font-weight: bold;
+        }
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.2);
+            border-left-color: #bb86fc;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Предсказание, основанное на случайных событиях.</h1>
+	<h2>Предсказание математически обосновано, в качестве поставщика данных выступает CH@OS.</h2>
+	<h3>Время течёт, подрезая камень скал.</h3>
+	<h3>Хаос и разрушение, как единственная природная форма созидания.</h3>
+        <form id="prediction-form">
+            <div class="form-group">
+                <label for="name">Ваше имя:</label>
+                <input type="text" id="name" required placeholder="e.g., c0wb0y">
+            </div>
+
+            <div class="form-group">
+                <label for="theme">Тематика при формировании предсказания:</label>
+                <select id="theme">
+                    <option value="Карты Tarot (T)">Карты Tarot (Т)</option>
+                    <option value="Скандинавские руны (SK)">Скандинавские руны (SK)</option>
+                    <option value="Научная фантастика (SF)">Научная Фантасика (SF)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="invite_code">Invite Code:</label>
+                <input type="password" id="invite_code" required placeholder="Введите ваш секретный код:">
+            </div>
+
+	    <button type="submit" id="submit-button">Получить предсказание от c0wb0y!</button>
+        </form>
+
+        <div id="result" class="hidden"></div>
+    </div>
+
+    <script>
+        const form = document.getElementById('prediction-form');
+        const resultDiv = document.getElementById('result');
+        const submitButton = document.getElementById('submit-button');
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault(); // Prevent page reload
+
+            // Get form values
+            const name = document.getElementById('name').value;
+            const theme = document.getElementById('theme').value;
+            const inviteCode = document.getElementById('invite_code').value;
+
+            // --- UI: Show loading state ---
+            submitButton.disabled = true;
+            resultDiv.classList.remove('hidden');
+            resultDiv.innerHTML = '<div class="spinner"></div>';
+            resultDiv.classList.remove('error');
+
+            try {
+                // --- API Call ---
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        theme: theme,
+                        invite_code: inviteCode
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    // Handle errors from the API (like 403, 500)
+                    throw new Error(data.error || 'Something went wrong');
+                }
+                
+                // --- UI: Display success ---
+                resultDiv.innerHTML = `
+                    <strong>Prediction for ${data.prediction_for} (${data.theme}):</strong>
+                    <p>${data.prediction}</p>
+                    <hr>
+                    <small>Seed Words: ${data.seed_words}</small>
+                `;
+
+            } catch (error) {
+                // --- UI: Display error ---
+                resultDiv.classList.add('error');
+                resultDiv.innerText = `Error: ${error.message}`;
+            } finally {
+                // --- UI: Reset button ---
+                submitButton.disabled = false;
+            }
+        });
+    </script>
+
+</body>
+</html>
