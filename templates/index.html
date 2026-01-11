@@ -102,17 +102,28 @@
             </div>
 
             <div class="form-group">
+                <label for="date_for">Интервал будущего, где проводим дискретный анализ:</label>
+                <select id="date_for">
+                    <option value="24 hours - 72 hours">Ближайшее будущее (1-3 дня)</option>
+                    <option value="week">На ближайшую неделю</option>
+                    <option value="year">На год вперёд</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label for="theme">Тематика при формировании предсказания:</label>
                 <select id="theme">
-                    <option value="Карты Tarot (T)">Карты Tarot (Т)</option>
-                    <option value="Скандинавские руны (SK)">Скандинавские руны (SK)</option>
-                    <option value="Научная фантастика (SF)">Научная Фантасика (SF)</option>
+                    <option value="Tarot">Карты Tarot (Т)</option>
+                    <option value="Runes">Скандинавские руны (SK)</option>
+                    <option value="Sci-Fi">Научная Фантастика (SF)</option>
+                                     <option value="Stars">Астрология по звездам (AS)</option>
+                     <option value="Numbers">Нумерология (NUM)</option>
+
                 </select>
             </div>
 
             <div class="form-group">
                 <label for="invite_code">Invite Code:</label>
-                <input type="password" id="invite_code" required placeholder="Введите ваш секретный код:">
+                <input type="password" id="invite_code" required placeholder="Введите ваш секретный код: SECRET123" value='SECRET123'>
             </div>
 
 	    <button type="submit" id="submit-button">Получить предсказание от c0wb0y!</button>
@@ -131,6 +142,7 @@
 
             // Get form values
             const name = document.getElementById('name').value;
+            const datefor = document.getElementById('date_for').value;
             const theme = document.getElementById('theme').value;
             const inviteCode = document.getElementById('invite_code').value;
 
@@ -150,6 +162,7 @@
                     body: JSON.stringify({
                         name: name,
                         theme: theme,
+                        date_for: datefor,
                         invite_code: inviteCode
                     }),
                 });
@@ -160,10 +173,10 @@
                     // Handle errors from the API (like 403, 500)
                     throw new Error(data.error || 'Something went wrong');
                 }
-                
+
                 // --- UI: Display success ---
                 resultDiv.innerHTML = `
-                    <strong>Prediction for ${data.prediction_for} (${data.theme}):</strong>
+                    <strong>Предсказание для: ${data.prediction_for} (${data.theme}):</strong>
                     <p>${data.prediction}</p>
                     <hr>
                     <small>Seed Words: ${data.seed_words}</small>
