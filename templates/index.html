@@ -3,195 +3,607 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prediction Generator</title>
+    <title>Ch@os Prediction Generator</title>
     <style>
+        /* --- GLOBAL VARIABLES & THEMES --- */
+        :root {
+            /* Default (Stars) */
+            --bg-primary: #0a0a0a;
+            --bg-secondary: #121212;
+            --container-bg: rgba(30, 30, 30, 0.85);
+            --accent-color: #ff9800;
+            --text-main: #e0e0e0;
+            --text-dim: #b0b0b0;
+            --border-color: rgba(255, 152, 0, 0.3);
+            --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --btn-gradient: linear-gradient(135deg, #ff9800 0%, #f57c00 100%);
+            --input-bg: rgba(40, 40, 40, 0.8);
+            --shadow-color: rgba(255, 152, 0, 0.2);
+        }
+
+        /* Tarot Theme Overrides */
+        [data-theme="Tarot"] {
+            --bg-primary: #1a001f;
+            --bg-secondary: #2a0033;
+            --container-bg: rgba(42, 0, 51, 0.85);
+            --accent-color: #d236ed;
+            --text-main: #f3e5f5;
+            --text-dim: #ce93d8;
+            --border-color: rgba(156, 39, 176, 0.5);
+            --font-main: "Georgia", "Times New Roman", serif;
+            --btn-gradient: linear-gradient(135deg, #7b1fa2 0%, #4a148c 100%);
+            --input-bg: rgba(60, 20, 80, 0.6);
+            --shadow-color: rgba(156, 39, 176, 0.4);
+        }
+
+        /* Runes Theme Overrides */
+        [data-theme="Runes"] {
+            --bg-primary: #1b1410;
+            --bg-secondary: #3e2723;
+            --container-bg: rgba(46, 28, 20, 0.9);
+            --accent-color: #d7ccc8;
+            --text-main: #d7ccc8;
+            --text-dim: #a1887f;
+            --border-color: rgba(141, 110, 99, 0.6);
+            --font-main: "Palatino Linotype", "Book Antiqua", Palatino, serif;
+            --btn-gradient: linear-gradient(135deg, #5d4037 0%, #3e2723 100%);
+            --input-bg: rgba(62, 39, 35, 0.6);
+            --shadow-color: rgba(141, 110, 99, 0.3);
+        }
+
+        /* Sci-Fi Theme Overrides */
+        [data-theme="Sci-Fi"] {
+            --bg-primary: #000508;
+            --bg-secondary: #001f2b;
+            --container-bg: rgba(0, 20, 30, 0.9);
+            --accent-color: #00e5ff;
+            --text-main: #e0f7fa;
+            --text-dim: #4dd0e1;
+            --border-color: rgba(0, 229, 255, 0.5);
+            --font-main: "Courier New", Courier, monospace;
+            --btn-gradient: linear-gradient(135deg, #00acc1 0%, #006064 100%);
+            --input-bg: rgba(0, 60, 80, 0.6);
+            --shadow-color: rgba(0, 229, 255, 0.3);
+        }
+
+        /* Numbers Theme Overrides */
+        [data-theme="Numbers"] {
+            --bg-primary: #051405;
+            --bg-secondary: #0d2a0d;
+            --container-bg: rgba(5, 20, 5, 0.9);
+            --accent-color: #4caf50;
+            --text-main: #e8f5e9;
+            --text-dim: #81c784;
+            --border-color: rgba(76, 175, 80, 0.6);
+            --font-main: "Consolas", "Monaco", monospace;
+            --btn-gradient: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+            --input-bg: rgba(20, 60, 20, 0.6);
+            --shadow-color: rgba(76, 175, 80, 0.3);
+        }
+
+        /* --- BASE STYLES --- */
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
+            font-family: var(--font-main);
+            background-color: var(--bg-primary);
+            color: var(--text-light);
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            overflow-x: hidden;
+            position: relative;
+            transition: background-color 0.8s ease, color 0.5s ease;
         }
+
+        /* --- DYNAMIC BACKGROUNDS --- */
+        
+        /* 1. Starfield (Default/Stars) - controlled via opacity */
+        .stars-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 1s ease;
+        }
+        
+        /* 2. Sci-Fi Grid */
+        .scifi-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: -2;
+            background-image: 
+                linear-gradient(var(--border-color) 1px, transparent 1px),
+                linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 50px 50px;
+            background-position: center top;
+            transform: perspective(500px) rotateX(60deg) translateY(-100px) scale(2);
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        /* 3. Tarot Vignette */
+        .tarot-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            background: radial-gradient(circle at center, var(--bg-secondary) 0%, #000 100%);
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        /* 4. Runes Fog */
+        .runes-bg {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -2;
+            background: radial-gradient(circle at 50% 100%, var(--bg-secondary), var(--bg-primary));
+            opacity: 0;
+            transition: opacity 0.8s ease;
+        }
+
+        /* Active classes for backgrounds */
+        [data-theme="Stars"] .stars-bg { opacity: 1; }
+        [data-theme="Sci-Fi"] .scifi-bg { opacity: 0.15; }
+        [data-theme="Tarot"] .tarot-bg { opacity: 1; }
+        [data-theme="Runes"] .runes-bg { opacity: 1; }
+        [data-theme="Numbers"] .scifi-bg { opacity: 0.05; background-size: 20px 20px; } /* Reuse grid loosely */
+
+        .star {
+            position: absolute;
+            background: white;
+            border-radius: 50%;
+            animation: twinkle var(--duration) infinite alternate;
+        }
+
+        @keyframes twinkle {
+            from { opacity: 0.3; }
+            to { opacity: 1; }
+        }
+
+        /* --- CONTAINER --- */
         .container {
             width: 90%;
-            max-width: 600px;
-            background-color: #1e1e1e;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+            max-width: 700px;
+            background-color: var(--container-bg);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px var(--shadow-color);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            position: relative;
+            z-index: 1;
+            transition: all 0.5s ease;
         }
-        h1 {
+
+        .header {
             text-align: center;
-            color: #bb86fc;
+            margin-bottom: 2rem;
+            position: relative;
         }
+
+        h1 {
+            font-size: 2.2rem;
+            /* Dynamic Gradient Title */
+            background: linear-gradient(90deg, var(--text-main), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+            transition: all 0.5s ease;
+            text-shadow: 0 0 10px var(--shadow-color);
+        }
+
+        .subtitle {
+            color: var(--text-dim);
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .quote {
+            font-style: italic;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            padding: 0.5rem;
+            border-left: 2px solid var(--accent-color);
+            opacity: 0.8;
+        }
+
+        /* --- FORM ELEMENTS --- */
         .form-group {
             margin-bottom: 1.5rem;
+            position: relative;
         }
+
         label {
             display: block;
             margin-bottom: 0.5rem;
-            color: #b0b0b0;
+            color: var(--accent-color);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.8rem;
+            transition: color 0.3s ease;
         }
+
         input, select, button {
             width: 100%;
-            padding: 0.75rem;
-            border-radius: 4px;
-            border: 1px solid #333;
-            background-color: #2c2c2c;
-            color: #e0e0e0;
+            padding: 0.85rem;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-main);
+            font-family: var(--font-main);
             font-size: 1rem;
             box-sizing: border-box;
+            transition: all 0.3s ease;
         }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 10px var(--shadow-color);
+        }
+
         button {
-            background-color: #6200ee;
+            background: var(--btn-gradient);
             border: none;
             cursor: pointer;
             font-weight: bold;
-            transition: background-color 0.3s;
+            color: white;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 0.5rem;
         }
-        button:disabled {
-            background-color: #333;
-            cursor: not-allowed;
-        }
+
         button:hover:not(:disabled) {
-            background-color: #3700b3;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px var(--shadow-color);
+            filter: brightness(1.1);
         }
-        #result {
+
+        button:disabled {
+            background: #444;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* --- THEME SPECIFIC RESULT STYLES --- */
+        .result-container {
             margin-top: 2rem;
-            background-color: #2c2c2c;
-            padding: 1.5rem;
-            border-radius: 4px;
-            white-space: pre-wrap; /* Preserves line breaks in the prediction */
-            border-left: 4px solid #03dac6;
-        }
-        .hidden {
+            border-radius: 10px;
+            padding: 0;
+            overflow: hidden;
+            animation: fadeIn 0.5s ease;
             display: none;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 0 15px var(--shadow-color);
+            background: rgba(0,0,0,0.2);
         }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Inner Content Padding */
+        .theme-content-wrapper {
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .theme-header-wrapper {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            text-align: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .theme-header-wrapper h3 {
+            color: var(--accent-color);
+            margin: 0;
+            font-size: 1.2rem;
+        }
+
+        /* Specific Elements */
+        .tarot-card {
+            width: 120px;
+            height: 180px;
+            background: linear-gradient(135deg, var(--accent-color) 0%, #000 100%);
+            border: 2px solid var(--text-main);
+            border-radius: 10px;
+            margin: 0 auto 2rem;
+            position: relative;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .runes-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .rune {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            padding: 1rem 0;
+            font-size: 1.5rem;
+            color: var(--accent-color);
+        }
+
+        .terminal {
+            background: #000;
+            border-radius: 5px;
+            padding: 1.5rem;
+            text-align: left;
+            border: 1px solid var(--accent-color);
+        }
+
+.prediction-text {
+    line-height: 1.6;
+    margin: 1rem 0;
+    padding: 1rem;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 5px;
+    border-left: 3px solid var(--accent-color);
+    color: var(--text-main);
+    text-align: left;
+    /* Add these two lines */
+    white-space: pre-wrap; 
+    word-wrap: break-word;
+}
+        .seed-words {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px dashed var(--border-color);
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-left-color: var(--accent-color);
+            border-radius: 50%;
+            width: 40px; height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
         .error {
             color: #cf6679;
-            font-weight: bold;
+            padding: 1rem;
+            background: rgba(207, 102, 121, 0.1);
+            border-left: 3px solid #cf6679;
+            margin-top: 1rem;
         }
-        .spinner {
-            border: 4px solid rgba(255, 255, 255, 0.2);
-            border-left-color: #bb86fc;
-            border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            animation: spin 1s linear infinite;
-            margin: 1rem auto;
-        }
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+
+        /* Mobile Adjustments */
+        @media (max-width: 600px) {
+            .container { padding: 1.5rem; width: 95%; }
+            h1 { font-size: 1.8rem; }
+            .runes-grid { grid-template-columns: repeat(3, 1fr); }
         }
     </style>
 </head>
-<body>
+<body data-theme="Stars">
+
+    <div class="stars-bg" id="starfield"></div>
+    <div class="scifi-bg"></div>
+    <div class="tarot-bg"></div>
+    <div class="runes-bg"></div>
 
     <div class="container">
-        <h1>Предсказание, основанное на случайных событиях.</h1>
-	<h2>Предсказание математически обосновано, в качестве поставщика данных выступает CH@OS.</h2>
-	<h3>Время течёт, подрезая камень скал.</h3>
-	<h3>Хаос и разрушение, как единственная природная форма созидания.</h3>
+        <div class="header">
+            <h1>Предсказание от c0wb0y</h1>
+            <div class="subtitle">Математически обоснованный Хаос</div>
+            <div class="quote">"Хаос — это порядок, который мы еще не расшифровали."</div>
+        </div>
+
         <form id="prediction-form">
             <div class="form-group">
                 <label for="name">Ваше имя:</label>
-                <input type="text" id="name" required placeholder="e.g., c0wb0y">
+                <input type="text" id="name" required placeholder="Введите имя..." value="Traveler">
             </div>
-
+            
             <div class="form-group">
-                <label for="date_for">Интервал будущего, где проводим дискретный анализ:</label>
+                <label for="date_for">Интервал:</label>
                 <select id="date_for">
                     <option value="24 hours - 72 hours">Ближайшее будущее (1-3 дня)</option>
                     <option value="week">На ближайшую неделю</option>
                     <option value="year">На год вперёд</option>
                 </select>
             </div>
+            
             <div class="form-group">
-                <label for="theme">Тематика при формировании предсказания:</label>
+                <label for="theme">Выберите инструмент:</label>
                 <select id="theme">
-                    <option value="Tarot">Карты Tarot (Т)</option>
-                    <option value="Runes">Скандинавские руны (SK)</option>
-                    <option value="Sci-Fi">Научная Фантастика (SF)</option>
-                                     <option value="Stars">Астрология по звездам (AS)</option>
-                     <option value="Numbers">Нумерология (NUM)</option>
-
+                    <option value="Stars" selected>✦ Астрология Звёзд (AS)</option>
+                    <option value="Tarot">📿 Карты Таро (Т)</option>
+                    <option value="Runes">ᚱ Скандинавские Руны (SK)</option>
+                    <option value="Sci-Fi">⚡ Sci-Fi Терминал (SF)</option>
+                    <option value="Numbers">🔢 Нумерология (NUM)</option>
                 </select>
             </div>
 
             <div class="form-group">
-                <label for="invite_code">Invite Code:</label>
-                <input type="password" id="invite_code" required placeholder="Введите ваш секретный код: SECRET123" value='SECRET123'>
+                <label for="invite_code">Код Доступа:</label>
+                <input type="password" id="invite_code" required placeholder="***" value="SECRET123">
             </div>
-
-	    <button type="submit" id="submit-button">Получить предсказание от c0wb0y!</button>
+            
+            <button type="submit" id="submit-button">Инициировать Прогноз</button>
         </form>
 
-        <div id="result" class="hidden"></div>
+        <div id="result-area" class="result-container">
+            <div class="theme-header-wrapper">
+                <h3 id="result-title">Результат</h3>
+            </div>
+            <div class="theme-content-wrapper" id="result-content">
+                </div>
+            <div style="padding: 0 2rem 2rem 2rem;">
+                <div class="prediction-text" id="prediction-output"></div>
+                <div class="seed-words" id="seed-output"></div>
+            </div>
+        </div>
+
+        <div id="loading" style="display: none;">
+            <div class="spinner"></div>
+        </div>
+        <div id="error" class="error" style="display: none;"></div>
     </div>
 
     <script>
+        // --- 1. Visual Effects Logic ---
+
+        function createStarfield() {
+            const starfield = document.getElementById('starfield');
+            starfield.innerHTML = ''; // Clear prev
+            for (let i = 0; i < 100; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 3;
+                star.style.width = `${size}px`;
+                star.style.height = `${size}px`;
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                star.style.opacity = Math.random();
+                star.style.setProperty('--duration', `${1 + Math.random() * 3}s`);
+                starfield.appendChild(star);
+            }
+        }
+
+        // --- 2. Dynamic Theme Switching ---
+        
+        const themeSelect = document.getElementById('theme');
+        const body = document.body;
+
+        // Apply theme immediately on change
+        themeSelect.addEventListener('change', (e) => {
+            const selectedTheme = e.target.value;
+            body.setAttribute('data-theme', selectedTheme);
+            
+            // Optional: Clear previous results when theme changes to avoid confusion
+            document.getElementById('result-area').style.display = 'none';
+        });
+
+        // Initialize background
+        createStarfield();
+
+        // --- 3. Result Generators (Visuals inside the result box) ---
+
+        function getThemeVisuals(theme) {
+            if (theme === 'Tarot') {
+                return `<div class="tarot-card"></div>`;
+            } 
+            else if (theme === 'Runes') {
+                const runes = ['ᚠ', 'ᚢ', 'ᚦ', 'ᚨ', 'ᚱ', 'ᚲ', 'ᚷ', 'ᚹ', 'ᚺ', 'ᚾ', 'ᛁ', 'ᛃ', 'ᛇ', 'ᛈ', 'ᛉ', 'ᛊ', 'ᛏ', 'ᛒ', 'ᛖ', 'ᛗ', 'ᛚ', 'ᛜ', 'ᛟ', 'ᛞ'];
+                let gridHtml = '<div class="runes-grid">';
+                for(let i=0; i<5; i++) {
+                    gridHtml += `<div class="rune">${runes[Math.floor(Math.random()*runes.length)]}</div>`;
+                }
+                gridHtml += '</div>';
+                return gridHtml;
+            }
+            else if (theme === 'Sci-Fi') {
+                return `
+                <div class="terminal">
+                    <span style="color:#ff5f56">●</span> <span style="color:#ffbd2e">●</span> <span style="color:#27c93f">●</span><br><br>
+                    <span style="color:var(--accent-color)">$ executing prediction_protocol.sh...</span><br>
+                    <span style="opacity:0.7">> analyzing timeline... done.</span>
+                </div>`;
+            }
+            else if (theme === 'Numbers') {
+                const sacred = [7, 11, 33, 42, 108, 144];
+                return `<div style="font-size: 4rem; font-weight:bold; color:var(--accent-color); text-shadow:0 0 15px var(--accent-color)">
+                    ${sacred[Math.floor(Math.random()*sacred.length)]}
+                </div>`;
+            }
+            else { // Stars
+                return `<div style="height:100px; position:relative;">
+                    <div class="star" style="width:4px; height:4px; top:50%; left:50%; box-shadow: 0 0 20px white"></div>
+                    <div style="position:absolute; width:100%; top:60%; text-align:center; opacity:0.5">✧ Констелляция сформирована ✧</div>
+                </div>`;
+            }
+        }
+
+        function getThemeTitle(theme) {
+            const titles = {
+                'Tarot': '📿 Расклад Таро',
+                'Runes': 'ᚱ Рунический Став',
+                'Sci-Fi': '⚡ Результат Анализа',
+                'Numbers': '🔢 Нумерологический Код',
+                'Stars': '✦ Звездная Карта'
+            };
+            return titles[theme] || 'Результат';
+        }
+
+        // --- 4. Form Handling ---
+
         const form = document.getElementById('prediction-form');
-        const resultDiv = document.getElementById('result');
         const submitButton = document.getElementById('submit-button');
 
         form.addEventListener('submit', async (event) => {
-            event.preventDefault(); // Prevent page reload
+            event.preventDefault();
 
-            // Get form values
+            // Get current values
             const name = document.getElementById('name').value;
             const datefor = document.getElementById('date_for').value;
             const theme = document.getElementById('theme').value;
             const inviteCode = document.getElementById('invite_code').value;
 
-            // --- UI: Show loading state ---
+            // UI Loading State
+            document.getElementById('result-area').style.display = 'none';
+            document.getElementById('error').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
             submitButton.disabled = true;
-            resultDiv.classList.remove('hidden');
-            resultDiv.innerHTML = '<div class="spinner"></div>';
-            resultDiv.classList.remove('error');
 
             try {
-                // --- API Call ---
+                // NOTE: Using a mock response for demonstration if API fails, 
+                // remove the catch block's fallback in production if strict error handling is needed.
                 const response = await fetch('https://predict0boy.pythonanywhere.com/predict', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        theme: theme,
-                        date_for: datefor,
-                        invite_code: inviteCode
-                    }),
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, theme, date_for: datefor, invite_code: inviteCode }),
                 });
 
+                if (!response.ok) throw new Error('Ошибка сети или неверный код');
                 const data = await response.json();
 
-                if (!response.ok) {
-                    // Handle errors from the API (like 403, 500)
-                    throw new Error(data.error || 'Something went wrong');
-                }
+                // Render Results
+// --- Inside the try block of your form listener ---
 
-                // --- UI: Display success ---
-                resultDiv.innerHTML = `
-                    <strong>Предсказание для: ${data.prediction_for} (${data.theme}):</strong>
-                    <p>${data.prediction}</p>
-                    <hr>
-                    <small>Seed Words: ${data.seed_words}</small>
-                `;
+// Render Results
+document.getElementById('result-title').textContent = getThemeTitle(theme);
+document.getElementById('result-content').innerHTML = getThemeVisuals(theme);
 
+// Format the prediction text (converts **bold** and newlines)
+let rawPrediction = data.prediction;
+let formattedPrediction = rawPrediction
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Convert **bold** to <strong>
+    .replace(/\n/g, '<br>');                         // Convert newlines to <br>
+
+document.getElementById('prediction-output').innerHTML = formattedPrediction;
+document.getElementById('seed-output').textContent = `Seed: ${data.seed_words || 'Unknown'}`;
+
+document.getElementById('result-area').style.display = 'block';                
             } catch (error) {
-                // --- UI: Display error ---
-                resultDiv.classList.add('error');
-                resultDiv.innerText = `Error: ${error.message}`;
+                console.error(error);
+                // Fallback for demo purposes if API is unreachable:
+                const fallbackDiv = document.getElementById('error');
+                fallbackDiv.textContent = `Ошибка: ${error.message}`;
+                fallbackDiv.style.display = 'block';
             } finally {
-                // --- UI: Reset button ---
+                document.getElementById('loading').style.display = 'none';
                 submitButton.disabled = false;
             }
         });
     </script>
-
 </body>
 </html>
