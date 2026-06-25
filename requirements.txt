@@ -1,3 +1,5 @@
 Flask
 mnemonic
 google-genai
+dotenv
+requests
